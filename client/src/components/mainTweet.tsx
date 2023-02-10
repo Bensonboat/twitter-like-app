@@ -1,32 +1,32 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import TimelineTweet from "./timelineTweet";
-
-// import { useSelector } from "react-redux";
-import axios from "axios";
+import { useSelector } from "react-redux";
+import API from "../axios/api";
+import { ITweet } from "./tweet";
+import { IRootState } from "../store";
 
 const MainTweet = () => {
   const [tweetText, setTweetText] = useState("");
 
-  // const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state: IRootState) => state.user);
 
   const handleSubmit = async (e: any) => {
-    // e.preventDefault();
-    // try {
-    //   const submitTweet = await axios.post("/tweets", {
-    //     userId: currentUser._id,
-    //     description: tweetText,
-    //   });
-    //   window.location.reload(false);
-    // } catch (err) {
-    //   console.log(err);
-    // }
+    e.preventDefault();
+
+    const data: ITweet = {
+      userId: currentUser!._id,
+      description: tweetText,
+      likes: [],
+    };
+    await API.createTweet(data);
+    window.location.reload();
   };
 
   return (
     <div>
-      {/* {currentUser && (
+      {currentUser && (
         <p className="font-bold pl-2 my-2">{currentUser.username}</p>
-      )} */}
+      )}
 
       <form className="border-b-2 pb-6">
         <textarea

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import StarBorderPurple500Icon from "@mui/icons-material/StarBorderPurple500";
 import SearchIcon from "@mui/icons-material/Search";
-
 import { useLocation } from "react-router-dom";
 import UserPlaceholder from "./userPlaceholder";
 

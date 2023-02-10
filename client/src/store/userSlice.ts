@@ -1,9 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 export interface IUser {
-  name: string;
+  _id: string;
+  username: string;
   email: string;
   password: string;
+  followers: string[];
+  following: string[];
+  description: string;
+  profileProfile: string;
+  profilePicture: string;
 }
 
 export interface IUserSliceInitialState {
@@ -13,12 +19,8 @@ export interface IUserSliceInitialState {
 }
 
 const initialState: IUserSliceInitialState = {
-  currentUser: {
-    name: "init name",
-    email: "init email",
-    password: "init password",
-  },
-  isLoading: false,
+  currentUser: null,
+  isLoading: true,
   error: false,
 };
 
@@ -26,54 +28,50 @@ export const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    test: (state, action) => {
-      return { ...state, error: action.payload };
+    updateLoadingStatus: (state, action) => {
+      state.isLoading = action.payload;
     },
-    testUser: (state, action) => {
-      console.log(action, "test user action");
+    updateCurrentUser: (state, action) => {
+      state.currentUser = action.payload;
+    },
+    loginFailed: (state) => {
+      state.isLoading = false;
+      state.error = true;
+    },
+    logout: () => {
+      return initialState;
+    },
+    changeProfile: (state, action) => {
+      if (!state.currentUser) {
+        return;
+      }
+      state.currentUser.profilePicture = action.payload;
+    },
+    following: (state, action) => {
+      if (!state.currentUser) {
+        return;
+      }
 
-      return { ...state, currentUser: action.payload };
+      if (state.currentUser.following.includes(action.payload)) {
+        state.currentUser.following.splice(
+          state.currentUser.following.findIndex(
+            (followingId) => followingId === action.payload
+          )
+        );
+      } else {
+        state.currentUser.following.push(action.payload);
+      }
     },
-    // loginStart: (state) => {
-    //   state.isLoading = true;
-    // },
-    // loginSuccess: (state, action) => {
-    //   state.isLoading = false;
-    //   state.currentUser = action.payload;
-    // },
-    // loginFailed: (state) => {
-    //   state.isLoading = false;
-    //   state.error = true;
-    // },
-    // logout: (state) => {
-    //   return initialState;
-    // },
-    // changeProfile: (state, action) => {
-    //   state.currentUser.profilePicture = action.payload;
-    // },
-    // following: (state, action) => {
-    //   if (state.currentUser.following.includes(action.payload)) {
-    //     state.currentUser.following.splice(
-    //       state.currentUser.following.findIndex(
-    //         (followingId) => followingId === action.payload
-    //       )
-    //     );
-    //   } else {
-    //     state.currentUser.following.push(action.payload);
-    //   }
-    // },
   },
 });
 
 export const {
-  test,
-  testUser,
-  // loginStart,
-  // loginSuccess,
-  // loginFailed,
-  // logout,
-  // changeProfile,
-  // following,
+  updateLoadingStatus,
+  updateCurrentUser,
+  loginFailed,
+  logout,
+  changeProfile,
+  following,
 } = userSlice.actions;
 
 export default userSlice.reducer;

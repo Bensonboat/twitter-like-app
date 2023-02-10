@@ -3,7 +3,7 @@ import { handleResponse } from "./response";
 import { Request, Response, NextFunction } from "express";
 import { client } from "../redis";
 
-interface IRedisVerifyPayload extends JwtPayload {
+export interface IRedisVerifyPayload extends JwtPayload {
   id: string;
 }
 
@@ -12,11 +12,12 @@ export const verifyToken = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.cookies.access_token;
+  const token = req.headers.authorization;
   const currentUserId = req.params.user_id;
 
   if (!token) {
-    return next(handleResponse(res, 401, "You are not authenticated"));
+    next(handleResponse(res, 401, "You are not authenticated"));
+    return;
   }
 
   const decoded = jwt.verify(

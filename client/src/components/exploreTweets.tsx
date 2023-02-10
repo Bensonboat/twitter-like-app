@@ -4,36 +4,31 @@ import Tweet, { ITweet } from "./tweet";
 import { IRootState } from "../store";
 import API from "../axios/api";
 
-const TimelineTweet = () => {
-  const [timeLine, setTimeLine] = useState<ITweet[] | null>(null);
+const ExploreTweets = () => {
+  const [explore, setExplore] = useState<ITweet[] | null>(null);
   const { currentUser } = useSelector((state: IRootState) => state.user);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!currentUser) {
-        return;
-      }
-
       try {
-        const timelineTweets = await API.getTimelineTweets(currentUser?._id);
-        setTimeLine(timelineTweets.data);
+        const tweets = await API.exploreTweets();
+        setExplore(tweets.data);
       } catch (err) {
         console.log("error", err);
       }
     };
-
     fetchData();
-  }, [currentUser?._id]);
+  }, [currentUser]);
 
   return (
     <div className="mt-6">
-      {timeLine &&
-        timeLine.map((tweet: any) => {
+      {explore &&
+        explore.map((tweet) => {
           return (
             <div key={tweet._id} className="p-2">
               <Tweet
                 tweet={tweet}
-                setData={setTimeLine}
+                setData={setExplore}
                 userData={currentUser!}
               />
             </div>
@@ -43,4 +38,4 @@ const TimelineTweet = () => {
   );
 };
 
-export default TimelineTweet;
+export default ExploreTweets;

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { handleResponse } from "../middleware/response";
 import { Request, Response, NextFunction } from "express";
 import { client } from "../redis";
+import { IRedisVerifyPayload } from "../middleware/verifyToken";
 
 export const signIn = async (
   req: Request,
@@ -28,11 +29,48 @@ export const signIn = async (
     // Redis session
     client.set(user._id.toString(), token);
 
-    res
-      .cookie("access_token", token, { httpOnly: true })
-      .status(200)
-      .json(othersData);
+    const payload = { ...othersData, access_token: token };
+    res.status(200).json(payload);
   } catch (err) {
     next(handleResponse(res, 400, "Login error"));
+  }
+};
+
+export const checkLoginStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const access_token = req.headers.authorization;
+
+  if (!access_token) {
+    next(handleResponse(res, 400, "Auth error"));
+    return;
+  }
+
+  let decoded = null;
+  try {
+    decoded = jwt.verify(
+      access_token,
+      `${process.env.JWT}`
+    ) as IRedisVerifyPayload;
+
+    if (!decoded) {
+      next(handleResponse(res, 400, "Auth error"));
+      return;
+    }
+  } catch {
+    next(handleResponse(res, 400, "Auth error"));
+    return;
+  }
+
+  const sessionToken = await client.get(decoded!.id);
+  if (sessionToken) {
+    res.status(200).json({
+      user_id: decoded!.id,
+      access_token,
+    });
+  } else {
+    next(handleResponse(res, 400, "Auth error"));
   }
 };

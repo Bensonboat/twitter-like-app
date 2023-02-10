@@ -1,9 +1,9 @@
 import User from "../models/user";
-// import Tweet from "../models/Tweet.js";
 import bcrypt from "bcryptjs";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { handleResponse } from "../middleware/response";
+import { client } from "../redis";
 
 export const createUser = async (
   req: Request,
@@ -18,16 +18,14 @@ export const createUser = async (
     await newUser.save();
 
     const token = jwt.sign({ id: newUser._id }, `${process.env.JWT}`);
+    client.set(newUser._id.toString(), token);
 
     // @ts-ignore
     // this type is not implemented yet!
     const { password, ...othersData } = newUser._doc;
-    res
-      .cookie("access_token", token, {
-        httpOnly: true,
-      })
-      .status(200)
-      .json(othersData);
+    const payload = { ...othersData, access_token: token };
+
+    res.status(200).json(payload);
   } catch (err) {
     next(handleResponse(res, 400, "Create user error"));
   }
@@ -74,7 +72,7 @@ export const updateUser = async (
         // Only put updatable filed here!!
         // followers: ["k1"],
         // ===========
-        // $set: req.body, // update every filed send in
+        $set: req.body, // update every filed send in
       },
       {
         new: true,

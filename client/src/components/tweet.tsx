@@ -1,59 +1,65 @@
-import axios from "axios";
-import React, { useState } from "react";
-// import formatDistance from "date-fns/formatDistance";
-
+import { Dispatch, SetStateAction, useState } from "react";
 import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-// import { useSelector } from "react-redux";
-
+import { useSelector } from "react-redux";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import { IRootState } from "../store";
+import { IUser } from "../store/userSlice";
+import API from "../axios/api";
 
-const Tweet = ({ tweet, setData }: any) => {
-  // const { currentUser } = useSelector((state) => state.user);
-  const currentUser = {
-    _id: 1,
-  };
-  const [userData, setUserData] = useState();
+export interface ITweet {
+  _id?: string;
+  userId: string;
+  description: string;
+  likes: string[];
+}
 
-  // const dateStr = formatDistance(new Date(tweet.createdAt), new Date());
+interface ITweetProps {
+  tweet: ITweet;
+  userData: IUser;
+  setData: Dispatch<SetStateAction<ITweet[] | null>>;
+}
+
+const Tweet = (props: ITweetProps) => {
+  const { currentUser } = useSelector((state: IRootState) => state.user);
   const location = useLocation().pathname;
   const { id } = useParams();
+  const [userData, setUserData] = useState<IUser | null>(null);
 
-  console.log(location);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const findUser = await axios.get(`/users/find/${tweet.userId}`);
-
-        setUserData(findUser.data);
+        const user = await API.getUser(props.tweet.userId);
+        setUserData(user.data);
       } catch (err) {
         console.log("error", err);
       }
     };
 
     fetchData();
-  }, [tweet.userId, tweet.likes]);
+  }, []);
 
   const handleLike = async (e: any) => {
-    // e.preventDefault();
-    // try {
-    //   const like = await axios.put(`/tweets/${tweet._id}/like`, {
-    //     id: currentUser._id,
-    //   });
-    //   if (location.includes("profile")) {
-    //     const newData = await axios.get(`/tweets/user/all/${id}`);
-    //     setData(newData.data);
-    //   } else if (location.includes("explore")) {
-    //     const newData = await axios.get(`/tweets/explore`);
-    //     setData(newData.data);
-    //   } else {
-    //     const newData = await axios.get(`/tweets/timeline/${currentUser._id}`);
-    //     setData(newData.data);
-    //   }
-    // } catch (err) {
-    //   console.log("error", err);
-    // }
+    e.preventDefault();
+    if (!currentUser) {
+      return;
+    }
+
+    try {
+      await API.updateTweetLike(props.tweet!._id!, currentUser._id);
+      let res;
+      if (location.includes("profile")) {
+        res = await API.getUserAllTweets(id!);
+      } else if (location.includes("explore")) {
+        res = await API.exploreTweets();
+      } else {
+        res = await API.getTimelineTweets(id!);
+      }
+      props.setData(res.data);
+    } catch (err) {
+      console.log("error", err);
+    }
   };
 
   return (
@@ -61,23 +67,19 @@ const Tweet = ({ tweet, setData }: any) => {
       {userData && (
         <>
           <div className="flex space-x-2">
-            {/* <img src="" alt="" /> */}
-            {/* <Link to={`/profile/${userData._id}`}>
+            <Link to={`/profile/${userData._id}`}>
               <h3 className="font-bold">{userData.username}</h3>
-            </Link> */}
-
-            {/* <span className="font-normal">@{userData.username}</span> */}
-            {/* <p> - {dateStr}</p> */}
+            </Link>
+            <span className="font-normal">@{userData.username}</span>
           </div>
-
-          <p>{tweet.description}</p>
+          <p>{props.tweet.description}</p>
           <button onClick={handleLike}>
-            {tweet.likes.includes(currentUser._id) ? (
+            {props.tweet.likes.includes(currentUser!._id) ? (
               <FavoriteIcon className="mr-2 my-2 cursor-pointer"></FavoriteIcon>
             ) : (
               <FavoriteBorderIcon className="mr-2 my-2 cursor-pointer"></FavoriteBorderIcon>
             )}
-            {tweet.likes.length}
+            {props.tweet.likes.length}
           </button>
         </>
       )}

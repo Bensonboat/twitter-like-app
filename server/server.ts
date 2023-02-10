@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-
+import cors from "cors";
 import userRoutes from "./routes/user";
 import tweetRoutes from "./routes/tweet";
 import authRoutes from "./routes/auth";
@@ -11,10 +11,7 @@ import authRoutes from "./routes/auth";
 import { createRedis } from "./redis";
 
 const app = express();
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Application works!");
-});
+app.use(cors());
 
 dotenv.config();
 
@@ -26,7 +23,7 @@ const connect = () => {
 app.use(cookieParser());
 app.use(express.json());
 
-app.use("/api", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", tweetRoutes);
 
