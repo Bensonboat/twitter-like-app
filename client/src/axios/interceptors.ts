@@ -5,7 +5,7 @@ export interface IAxiosError extends AxiosError {
 }
 
 const service = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: "http://35.201.232.135:8000",
   timeout: 1000 * 10,
 });
 
